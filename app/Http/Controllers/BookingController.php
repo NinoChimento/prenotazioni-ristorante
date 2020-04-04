@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Redirect;
 use Illuminate\Http\Request;
 use App\Booking;
 class BookingController extends Controller
@@ -11,6 +12,16 @@ class BookingController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+
+     // controlli 
+
+     protected $validazione = [
+        "nome" => "required|string|max:40",
+        "posti" => "required|numeric",
+        "giorno_prenotazione" => "required|date",
+        "orario" => "required"
+     ];
+
     public function index()
     {
         $bookings = Booking::all();
@@ -37,30 +48,33 @@ class BookingController extends Controller
     public function store(Request $request)
     {
         //controllo dati form
-        $request->validate([
-            "nome"=> "required|string|max:40",
-            "posti"=> "required|numeric",
-            "giorno_prenotazione"=> "required|date",
-            "orario"=> "required"
-        ]);
+        $request->validate(
+            $this->validazione
+            );
         // salvo i dati
         $data = $request->all();
+        // controllo che il cliente non abbia gia altre prenotazioni
+        //tramite il nomitavivo non avendo gestito in questo lavoro autenticazione user
+        $control = Booking::where("nome",$data["nome"])->first();
         
-        $booking = new Booking();
-        $booking->fill($data);
-        //controllo i posti disponibili
+        if (!$control) {
+            return redirect()->back()->withInput();
+        }
+        //controllo i posti disponibili ed eventualmente accetto la prenotazione
         $postiPrenotati = Booking::all()->sum("posti");
         
-        // if($postiPrenotati + $data["posti"] <= 20){
-        //     $booking->save();
+        if($postiPrenotati + $data["posti"] <= 20){
+            $booking = new Booking();
+            $booking->fill($data);
+            $booking->save();
             if( $booking->save()){
-                return redirect()->route('index');
+                return  redirect("booking")->with("newBooking", $booking);
             }else {
                 abort("404 probelmi di connessione");
             }
-        // }else{
-        //     return back()->withInput();
-        // }
+        }else{
+           return Redirect::back()->withErrors(['Posti esauriti riprova tra un ora']);
+        }
             
         
     }
@@ -94,9 +108,40 @@ class BookingController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
-    {
-        //
+    public function update(Request $request, Booking $booking)
+    {   
+
+        if (empty($booking)) {
+            abort("404 prenotazione inesistente");
+        }
+        // controllo dati
+        $request->validate(
+            $this->validazione
+        );
+        $data = $request->all();
+        // compilazione dati
+        $booking->fill($data);
+
+        //controllo posti disponibili 
+        $postiPrenotati = Booking::all()->sum("posti");
+
+        if ($postiPrenotati + $data["posti"] <= 20) {
+            $booking->save();
+        // salvatagio dati
+
+        $response = $booking->update();
+        }   
+        $dati = [
+            "response" => $response,
+            "booking"=> $booking
+        ];
+
+        if ($response) {
+           return  redirect("booking")->with("updateBooking",$booking);
+        }else {
+            return redirect()->back($dati);
+        }
+
     }
 
     /**

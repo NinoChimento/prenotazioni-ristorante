@@ -5,6 +5,16 @@
             E stata cancellata la prenotazione a nome di :{{session("delete")->nome}}
         </div>
     @endif
+@if (session("newBooking"))
+        <div class="alert alert-success">
+            Nuova prenotazione a nome di  :{{session("newBooking")->nome}}
+        </div>
+    @endif
+@if (session("updateBooking"))
+        <div class="alert alert-success">
+            Modifica prenotazione a nome di  :{{session("updateBooking")->nome}}
+        </div>
+    @endif    
 <h1 class="text-center">Prenotazioni risotrante</h1>
 <h2 class="text-center"><a class="btn btn-success" href="{{route("booking.create")}}">Prenota</a></h2>
 <div class="container">
