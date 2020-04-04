@@ -51,16 +51,16 @@ class BookingController extends Controller
         //controllo i posti disponibili
         $postiPrenotati = Booking::all()->sum("posti");
         
-        if($postiPrenotati + $data["posti"] <= 20){
-            $booking->save();
+        // if($postiPrenotati + $data["posti"] <= 20){
+        //     $booking->save();
             if( $booking->save()){
                 return redirect()->route('index');
             }else {
                 abort("404 probelmi di connessione");
             }
-        }else{
-            return back()->withInput();
-        }
+        // }else{
+        //     return back()->withInput();
+        // }
             
         
     }
@@ -82,9 +82,9 @@ class BookingController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit(Booking $booking)
     {
-        //
+        return view("edit",compact("booking"));
     }
 
     /**
@@ -105,8 +105,17 @@ class BookingController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Booking $booking)
     {
-        //
+        if(empty($booking)){
+            return redirect()->back();
+        }else{
+            $response = $booking->delete();
+            if($response){
+                return redirect("booking")->with("delete", $booking);
+            }else{
+                abort("404 errore di rete");
+            }
+        }
     }
 }

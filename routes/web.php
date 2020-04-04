@@ -13,7 +13,8 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::resource('/', 'BookingController');
+Route::resource('/booking', 'BookingController');
+
 // Route::get('/', function () {
 //     return view('/home');
 // });
